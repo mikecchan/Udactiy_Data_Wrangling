@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+In this problem set you work with cities infobox data, audit it, come up with a cleaning idea and then clean it up.
+In the first exercise we want you to audit the datatypes that can be found in some particular fields in the dataset.
+The possible types of values can be:
+- 'NoneType' if the value is a string "NULL" or an empty string ""
+- 'list', if the value starts with "{"
+- 'int', if the value can be cast to int
+- 'float', if the value can be cast to float, but is not an int
+- 'str', for all other values
+
+The audit_file function should return a dictionary containing fieldnames and the datatypes that can be found in the field.
+All the data initially is a string, so you have to do some checks on the values first.
+
+"""
+import codecs
+import csv
+import json
+import pprint
+
+CITIES = 'cities.csv'
+
+FIELDS = ["name", "timeZone_label", "utcOffset", "homepage", "governmentType_label", "isPartOf_label", "areaCode", "populationTotal", 
+          "elevation", "maximumElevation", "minimumElevation", "populationDensity", "wgs84_pos#lat", "wgs84_pos#long", 
+          "areaLand", "areaMetro", "areaUrban"]
+
+def audit_file(filename, fields):
+    
+    fieldtypes = {}
+    
+    for field in fields:
+        fieldtypes[field] = set()
+
+    # YOUR CODE HERE
+    with open(filename, "r") as f:
+        reader = csv.DictReader(f)
+        for x in range(0, 3):
+            next(reader)
+        for row in reader:
+            for fieldname in fields:
+                if row[fieldname]=='NULL' or row[fieldname]=="":
+                    fieldtypes[fieldname].add(type(None))
+
+                elif row[fieldname].startswith("{"):
+                    fieldtypes[fieldname].add(type([]))
+
+                elif check_int(row[fieldname]):
+                    #isinstance(row[fieldname], int):
+                    fieldtypes[fieldname].add(type(1))
+                
+                elif check_float(row[fieldname]) and check_not_int(row[fieldname]):
+                    fieldtypes[fieldname].add(type(1.1))
+                    
+                else:
+                    fieldtypes[fieldname].add(type("str"))
+                    
+    return fieldtypes
+
+
+def check_int(value):
+    try:
+        int(value)
+        return True
+    except ValueError:
+        return False
+ 
+def check_not_int(value):
+    try:
+        int(value)
+        return False
+    except ValueError:
+        return True
+
+def check_float(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+def test():
+    fieldtypes = audit_file(CITIES, FIELDS)
+
+    pprint.pprint(fieldtypes)
+
+    assert fieldtypes["areaLand"] == set([type(1.1), type([]), type(None)])
+    assert fieldtypes['areaMetro'] == set([type(1.1), type(None)])
+    
+if __name__ == "__main__":
+    test()
